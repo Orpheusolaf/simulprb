@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brussels Majority Simulator</title>
+  <!-- React & React‑DOM (development builds for simplicity) -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <!-- Babel (allows inline JSX in the browser) -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-4 min-h-screen">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    /* -------------------------------------------------------------
+       Brussels Parliament Majority Simulator (client‑side)
+       No backend required – deploy as a static page on GitHub Pages,
+       Netlify, Vercel, etc.
+    --------------------------------------------------------------*/
+
+    // ------------------------------ Data ------------------------------
+    const parties = [
+      // Francophone group (72 seats – majority 37)
+      { id: "MR",   name: "Mouvement Réformateur",             seats: 20, group: "fr" },
+      { id: "PS",   name: "Parti Socialiste",                 seats: 17, group: "fr" },
+      { id: "PTB",  name: "Parti du Travail de Belgique",      seats: 14, group: "fr" },
+      { id: "LE",   name: "Les Engagés",                      seats: 8,  group: "fr" },
+      { id: "ECO",  name: "Ecolo",                             seats: 7,  group: "fr" },
+      { id: "DEFI", name: "DéFI",                              seats: 4,  group: "fr" },
+      { id: "IND_FR", name: "Indépendant(s)",                  seats: 2,  group: "fr" },
+
+      // N‑Dutch group (17 seats – majority 9)
+      { id: "GROEN",  name: "Groen",              seats: 4, group: "nl" },
+      { id: "TFA",    name: "Team Fouad Ahidar",  seats: 3, group: "nl" },
+      { id: "NVA",    name: "N‑VA",               seats: 2, group: "nl" },
+      { id: "OPENVLD",name: "Open Vld",           seats: 2, group: "nl" },
+      { id: "VOOR",   name: "Vooruit.brussels",   seats: 2, group: "nl" },
+      { id: "VB",     name: "Vlaams Belang",       seats: 1, group: "nl" },
+      { id: "PVDA",   name: "PVDA",               seats: 1, group: "nl" },
+      { id: "CDV",    name: "CD&V",               seats: 1, group: "nl" },
+      { id: "IND_NL", name: "Onafhankelijke",     seats: 1, group: "nl" },
+    ];
+
+    const thresholds = { fr: 37, nl: 9, total: 45 };
+
+    // --------------------------- Components ---------------------------
+    function MajoritySimulator() {
+      const [selected, setSelected] = React.useState({});
+
+      const toggle = (id) =>
+        setSelected((prev) => ({ ...prev, [id]: !prev[id] }));
+
+      const totals = parties.reduce(
+        (acc, p) => {
+          if (selected[p.id]) {
+            acc[p.group] += p.seats;
+            acc.total += p.seats;
+          }
+          return acc;
+        },
+        { fr: 0, nl: 0, total: 0 }
+      );
+
+      const Status = ({ label, count, need }) => (
+        <div className="flex items-center gap-2">
+          <span className="font-semibold">{label} :</span>
+          <span>
+            {count}/{need}
+          </span>
+          {count >= need ? (
+            <span className="text-green-600 font-bold">✔︎</span>
+          ) : (
+            <span className="text-red-600 font-bold">✘</span>
+          )}
+        </div>
+      );
+
+      return (
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-3xl font-bold mb-6 text-center">
+            Brussels Majority Simulator
+          </h1>
+
+          {/* Party pickers */}
+          <div className="grid md:grid-cols-2 gap-8">
+            {[
+              { key: "fr", title: "Groupe francophone (72 sièges)" },
+              { key: "nl", title: "Groupe néerlandophone (17 sièges)" },
+            ].map(({ key, title }) => (
+              <div key={key} className="bg-white shadow rounded-2xl p-6">
+                <h2 className="text-xl font-semibold mb-4">{title}</h2>
+                {parties
+                  .filter((p) => p.group === key)
+                  .map((p) => (
+                    <label key={p.id} className="flex items-center justify-between mb-2 cursor-pointer">
+                      <span>
+                        <input
+                          type="checkbox"
+                          className="mr-2 h-4 w-4"
+                          checked={!!selected[p.id]}
+                          onChange={() => toggle(p.id)}
+                        />
+                        {p.name}
+                      </span>
+                      <span className="text-sm text-gray-600">{p.seats}</span>
+                    </label>
+                  ))}
+              </div>
+            ))}
+          </div>
+
+          {/* Results */}
+          <div className="bg-white shadow mt-8 p-6 rounded-2xl">
+            <h2 className="text-xl font-semibold mb-4">Résultat</h2>
+            <div className="flex flex-col gap-1">
+              <Status label="Francophone" count={totals.fr} need={thresholds.fr} />
+              <Status label="Néerlandophone" count={totals.nl} need={thresholds.nl} />
+              <Status label="Total" count={totals.total} need={thresholds.total} />
+            </div>
+          </div>
+
+          <p className="text-xs text-gray-500 mt-6 text-center">
+            Fonctionne 100 % dans votre navigateur ; copiez ce fichier sur GitHub Pages, Netlify Drop ou Vercel Static Hosting pour le mettre en ligne sans serveur dédié.
+          </p>
+        </div>
+      );
+    }
+
+    // ---------------------------- Mount app ----------------------------
+    ReactDOM.createRoot(document.getElementById("root")).render(<MajoritySimulator />);
+  </script>
+</body>
+</html>
